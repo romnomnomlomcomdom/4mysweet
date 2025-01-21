@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RotCoin Madness</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #a0e8d1; /* Lighter pastel teal */
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .container {
+      margin-top: 50px;
+    }
+
+    input {
+      padding: 10px;
+      width: 250px;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #80c9b0; /* Pastel teal button */
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #65a99d;
+    }
+
+    #crypto-market, #rotcoin-notis, #chama-message {
+      display: none;
+    }
+
+    #rotcoin-notis {
+      font-size: 24px;
+      margin-top: 20px;
+    }
+
+    #chama-message {
+      font-size: 200px; /* Larger text */
+      color: red;
+      font-weight: bold;
+      position: absolute;
+      z-index: 9999; /* Ensure it shows in front of everything */
+    }
+
+    .notification {
+      position: absolute;
+      font-size: 18px;
+      background-color: white;
+      color: black;
+      border: 2px solid black;
+      padding: 10px;
+      display: none;
+    }
+
+    .yes-button {
+      background-color: green;
+      color: white;
+      border: none;
+      padding: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .fade {
+      animation: fadeOut 2s forwards;
+    }
+
+    @keyframes fadeOut {
+      0% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+      }
+    }
+
+    .snake {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #00ff00;
+    }
+
+    .food {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #ff0000;
+    }
+
+    #snake-game {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      margin: 20px auto;
+      background-color: #333;
+      border: 2px solid #fff;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p>Enter 4 digit PIN</p>
+    <p>*hint* our anniversary <3</p>
+    <input type="password" id="pin">
+    <button onclick="checkPin()">Submit</button>
+  </div>
+
+  <div id="rotcoin-notis">ROTCOIN MARKET IS BOOMING!</div>
+  <div id="chama-message">CHAMA</div>
+  <div id="crypto-market"></div>
+
+  <div id="snake-game"></div>
+
+  <script>
+    let pinCorrect = "2208";
+    let notificationCount = 0;
+    let snakeGameInterval;
+    let snake, direction, snakeLength, food;
+    let notificationsShowing = true;
+
+    function checkPin() {
+      const pinInput = document.getElementById('pin').value;
+      if (pinInput === pinCorrect) {
+        document.querySelector('.container').style.display = 'none';
+        startNotifications();
+      } else {
+        alert("Incorrect PIN");
+      }
+    }
+
+    function startNotifications() {
+      for (let i = 0; i < 40; i++) {
+        setTimeout(() => createNotification(), i * 500); // Notifications pop up quicker
+      }
+    }
+
+    function createNotification() {
+      if (!notificationsShowing) return;
+
+      const notification = document.createElement("div");
+      notification.classList.add("notification");
+      notification.textContent = "Sad about $TRUMP? Invest in RotCoin today!";
+
+      const yesButton = document.createElement("button");
+      yesButton.classList.add("yes-button");
+      yesButton.textContent = "Yes";
+      yesButton.onclick = () => {
+        showChamaMessage();
+        // Hide notifications after CHAMA appears
+        notificationsShowing = false;
+        document.querySelectorAll('.notification').forEach(n => n.style.display = 'none');
+      };
+
+      notification.appendChild(yesButton);
+
+      document.body.appendChild(notification);
+
+      notification.style.top = `${Math.random() * 100}vh`;
+      notification.style.left = `${Math.random() * 100}vw`;
+      notification.style.display = "block";
+    }
+
+    function showChamaMessage() {
+      const chamaMessage = document.getElementById("chama-message");
+      chamaMessage.style.display = "block";
+      chamaMessage.style.top = "50%"; // Center vertically
+      chamaMessage.style.left = "50%"; // Center horizontally
+      chamaMessage.style.transform = "translate(-50%, -50%)"; // Adjust to make it exactly centered
+      chamaMessage.style.fontSize = "250px"; // Bigger font
+
+      setTimeout(() => {
+        chamaMessage.classList.add("fade");
+        setTimeout(() => {
+          hideEverythingAndShowSnakeGame();
+        }, 2000); // Delay before showing Snake game
+      }, 1000);
+    }
+
+    function hideEverythingAndShowSnakeGame() {
+      // Fade everything out
+      document.body.style.opacity = "0";
+      setTimeout(() => {
+        // Hide all elements
+        document.querySelectorAll('div').forEach(element => element.style.display = 'none');
+        // Show Snake game
+        startSnakeGame();
+      }, 2000); // Delay to ensure fade effect
+    }
+
+    function startSnakeGame() {
+      const gameContainer = document.getElementById("snake-game");
+      gameContainer.style.display = "block";
+      document.body.style.opacity = "1"; // Ensure body becomes visible
+
+      snake = [{ x: 5, y: 5 }];
+      direction = "RIGHT";
+      snakeLength = 1;
+      food = generateFood();
+
+      snakeGameInterval = setInterval(gameLoop, 200); // Slower Snake game
+
+      window.addEventListener("keydown", changeDirection);
+    }
+
+    function gameLoop() {
+      const gameContainer = document.getElementById("snake-game");
+
+      const head = { ...snake[0] };
+
+      switch (direction) {
+        case "UP":
+          head.y--;
+          break;
+        case "DOWN":
+          head.y++;
+          break;
+        case "LEFT":
+          head.x--;
+          break;
+        case "RIGHT":
+          head.x++;
+          break;
+      }
+
+      snake.unshift(head);
+
+      // Check for collision with food
+      if (head.x === food.x && head.y === food.y) {
+        snakeLength++;
+        food = generateFood();
+      } else {
+        snake.pop();
+      }
+
+      // Check for collision with walls or itself
+      if (
+        head.x < 0 || head.x >= 30 || head.y < 0 || head.y >= 30 ||
+        snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)
+      ) {
+        clearInterval(snakeGameInterval);
+        alert("Game Over");
+        document.body.removeChild(gameContainer);
+      }
+
+      drawGame(gameContainer);
+    }
+
+    function changeDirection(event) {
+      switch (event.keyCode) {
+        case 37: // Left arrow
+          if (direction !== "RIGHT") direction = "LEFT";
+          break;
+        case 38: // Up arrow
+          if (direction !== "DOWN") direction = "UP";
+          break;
+        case 39: // Right arrow
+          if (direction !== "LEFT") direction = "RIGHT";
+          break;
+        case 40: // Down arrow
+          if (direction !== "UP") direction = "DOWN";
+          break;
+      }
+    }
+
+    function generateFood() {
+      const x = Math.floor(Math.random() * 30);
+      const y = Math.floor(Math.random() * 30);
+      return { x, y };
+    }
+
+    function drawGame(gameContainer) {
+      gameContainer.innerHTML = "";
+      snake.forEach(segment => {
+        const segmentDiv = document.createElement("div");
+        segmentDiv.classList.add("snake");
+        segmentDiv.style.left = `${segment.x * 10}px`;
+        segmentDiv.style.top = `${segment.y * 10}px`;
+        gameContainer.appendChild(segmentDiv);
+      });
+
+      const foodDiv = document.createElement("div");
+      foodDiv.classList.add("food");
+      foodDiv.style.left = `${food.x * 10}px`;
+      foodDiv.style.top = `${food.y * 10}px`;
+      gameContainer.appendChild(foodDiv);
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
